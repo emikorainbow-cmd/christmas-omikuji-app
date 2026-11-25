@@ -385,7 +385,7 @@ window.XMAS_DATA = (function () {
     food: "風にのって、遠くからトナカイの鈴の音が聞こえてくる夜。工房の煙突からは甘い焼き菓子の香りがただよい、雪の上には、世界じゅうへ向かう小さな足あとが続いている――そんなふうに、昔から物語の中で語られてきました。",
     intro: "地図には載っていない村ですが、世界のクリスマスを一周したあなたの心の中には、もう道がひらいています。北極星を見上げたら、雪の村の灯りを思い出してみてください。",
     shareLine: "世界一周の旅の最後に、サンタクロースがくらすと語り継がれる伝説の村「北極星の村」へたどり着きました。",
-    image: "", scene: "northstar", stamp: "northstar",
+    image: "images/countries/north.webp", scene: "northstar", stamp: "northstar",
     song: "Hark! The Herald Angels Sing（天には栄え）", songNote: "メンデルスゾーンの曲（1840年）にのせて歌われる讃美歌",
     tune: T.hark, bpm: 120
   };
