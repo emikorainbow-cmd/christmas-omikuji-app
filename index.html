@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#060d24">
+<title>世界のクリスマス旅おみくじ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Noto+Color+Emoji&family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23081332'/%3E%3Cpath d='M16 4l2.6 8.4L27 16l-8.4 2.6L16 27l-2.6-8.4L5 16l8.4-3.6z' fill='%23f0cf7c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" data-screen="start">
+
+  <!-- 背景（ぼかした絵）。スマホでもパソコンでも画面のすみずみまで夜の世界に -->
+  <div class="backdrop" aria-hidden="true">
+    <div class="bd bd1 on" style="background-image:url(images/scene1-box-closed.webp)"></div>
+    <div class="bd bd2" style="background-image:url(images/scene2-box-open.webp)"></div>
+    <div class="bd bd3" style="background-image:url(images/scene3-card-rising.webp)"></div>
+  </div>
+
+  <!-- 舞台（縦長の絵。比率はそのまま） -->
+  <div id="stage">
+    <div id="stageInner">
+      <img class="scene sc1 on" src="images/scene1-box-closed.webp" width="941" height="1672" alt="雪の降る夜の街。クリスマスツリーとランタンのそばに、金のリボンのかかった赤いプレゼントボックスが置かれています。">
+      <img class="scene sc2" src="images/scene2-box-open.webp" width="941" height="1672" alt="" aria-hidden="true">
+      <img class="scene sc3" src="images/scene3-card-rising.webp" width="941" height="1672" alt="" aria-hidden="true">
+
+      <!-- 絵に重ねる光（位置は絵の上の座標でぴったり合わせています） -->
+      <svg class="lights" viewBox="0 0 941 1672" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <radialGradient id="tw"><stop offset="0" stop-color="#fffbe6"/><stop offset=".25" stop-color="#ffe7a3" stop-opacity=".85"/><stop offset="1" stop-color="#ffcf6a" stop-opacity="0"/></radialGradient>
+          <radialGradient id="warm"><stop offset="0" stop-color="#ffe2a0" stop-opacity=".9"/><stop offset=".4" stop-color="#ffb84d" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a2a" stop-opacity="0"/></radialGradient>
+          <radialGradient id="halo"><stop offset="0" stop-color="#fff0b8" stop-opacity=".9"/><stop offset=".5" stop-color="#ffc35a" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a2a" stop-opacity="0"/></radialGradient>
+          <linearGradient id="rib" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6d0"/><stop offset=".5" stop-color="#f2cf73"/><stop offset="1" stop-color="#c8963a"/></linearGradient>
+          <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+          <filter id="soft2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>
+        </defs>
+
+        <!-- ツリーの電飾 -->
+        <g class="tree-lights" id="treeLights"></g>
+        <!-- 街灯・窓・ランタン -->
+        <g class="lamps" id="lamps"></g>
+        <!-- 夜空の星のきらめき -->
+        <g class="glints" id="glints"></g>
+
+        <!-- ふたの隙間の光（シーン1） -->
+        <g class="seam">
+          <ellipse class="seam-halo" cx="482" cy="1098" rx="300" ry="90" fill="url(#halo)" opacity=".0"/>
+          <polyline class="seam-wide" points="222,1076 430,1121 744,1081" fill="none" stroke="#ffcf6a" stroke-width="16" stroke-linejoin="round" stroke-linecap="round" filter="url(#soft)"/>
+          <polyline class="seam-thin" points="226,1077 430,1120 740,1082" fill="none" stroke="#fff4cc" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" filter="url(#soft2)"/>
+        </g>
+
+        <!-- リボンがほどける光の線（第2幕） -->
+        <g class="ribbons" id="ribbons">
+          <path pathLength="1" d="M483 905C430 840 360 830 300 860C240 890 220 960 170 990"/>
+          <path pathLength="1" d="M483 905C540 840 640 820 700 860C760 900 770 980 820 1010"/>
+          <path pathLength="1" d="M483 905C470 820 420 760 360 720C300 680 280 620 300 570"/>
+          <path pathLength="1" d="M483 905C500 820 560 760 620 730C680 700 700 640 680 590"/>
+          <path pathLength="1" d="M483 905C440 960 330 1000 260 1060C200 1110 180 1170 130 1200"/>
+          <path pathLength="1" d="M483 905C530 960 650 1000 720 1070C780 1130 800 1180 840 1220"/>
+        </g>
+
+        <!-- 箱からあふれる光（第2・3幕） -->
+        <ellipse class="open-glow" cx="470" cy="1060" rx="260" ry="150" fill="url(#halo)"/>
+        <ellipse class="card-glow" cx="483" cy="640" rx="330" ry="260" fill="url(#halo)"/>
+      </svg>
+      <div class="flash" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <!-- 雪と光の粒 -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- 第1幕：最初の画面の文字とボタン -->
+  <div id="startUI" class="frame-ui">
+    <header class="title-block">
+      <h1 class="title"><span>世界のクリスマス</span><span>旅おみくじ</span></h1>
+      <p class="subtitle">聖なる夜、世界のどこかから<br>あなたへの贈り物が届きます。</p>
+      <p class="subtitle-en">A Magical Christmas Journey</p>
+    </header>
+    <div class="start-actions">
+      <button type="button" class="btn-gold" id="openBtn">
+        <svg class="orn" viewBox="0 0 40 12" aria-hidden="true"><path d="M2 6H26M26 6Q31 1 36 6Q31 11 26 6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="38" cy="6" r="1.4" fill="currentColor"/></svg>
+        <span>魔法の箱を開ける</span>
+        <svg class="orn flip" viewBox="0 0 40 12" aria-hidden="true"><path d="M2 6H26M26 6Q31 1 36 6Q31 11 26 6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="38" cy="6" r="1.4" fill="currentColor"/></svg>
+      </button>
+      <button type="button" class="btn-ghost" id="bookBtnStart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 17a3 3 0 0 1 3-3h11" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span>クリスマス旅のスタンプ帳</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 第2・3幕の言葉 -->
+  <div id="seqUI" class="frame-ui" aria-live="polite">
+    <p class="seq-text" id="seqText">世界のどこかから<br>あなたへの贈り物が届きました。</p>
+    <button type="button" class="skip" id="skipBtn">スキップ</button>
+  </div>
+
+  <!-- 右上：音と動き -->
+  <div class="topbar">
+    <button type="button" class="chip" id="motionBtn" aria-pressed="false">動きひかえめ</button>
+    <button type="button" class="chip" id="soundBtn" aria-pressed="true" aria-label="音：オン">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="mute" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span id="soundLabel">音</span>
+    </button>
+  </div>
+
+  <!-- 第4幕：結果（クリスマスカード） -->
+  <section id="result" class="screen" aria-label="世界のクリスマス旅" hidden>
+    <div class="result-wrap">
+      <div class="card" id="card">
+        <img class="card-frame" src="images/card-frame.webp" width="1086" height="1448" alt="">
+        <div class="pages" id="pages" tabindex="0" aria-roledescription="カルーセル">
+          <!-- 1ページ目：運勢と旅先 -->
+          <article class="page" id="p1" aria-label="1ページ目">
+            <div class="fortune" id="fortuneBlock">
+              <div class="f-row">
+                <div class="f-symbol" id="fSymbol"></div>
+                <div class="f-txt">
+                  <p class="f-kicker">あなたへの贈り物</p>
+                  <h2 class="f-name" id="fName"></h2>
+                  <p class="f-theme" id="fTheme"></p>
+                </div>
+              </div>
+            </div>
+            <p class="label" id="destLabel">あなたに届いたクリスマスの旅先</p>
+            <p class="country"><span class="flag" id="cFlag"></span><span class="c-name" id="cName"></span></p>
+            <p class="city" id="cCity"></p>
+            <figure class="landscape" id="landscape"></figure>
+            <p class="swipe-hint">つぎのページへ ›</p>
+          </article>
+          <!-- 2ページ目：その国のクリスマス -->
+          <article class="page" id="p2" aria-label="2ページ目">
+            <p class="label">この国のメリークリスマス</p>
+            <p class="greet" id="gText"></p>
+            <p class="greet-read" id="gRead"></p>
+            <p class="greet-lang" id="gLang"></p>
+            <div class="divider"></div>
+            <p class="label">クリスマスの過ごし方</p>
+            <p class="body" id="cCustoms"></p>
+            <p class="label">伝統的な料理・習慣</p>
+            <p class="body" id="cFood"></p>
+            <p class="label">旅へのおさそい</p>
+            <p class="body invite" id="cIntro"></p>
+            <p class="song" id="cSong"></p>
+            <p class="song-note" id="cSongNote"></p>
+          </article>
+          <!-- 3ページ目：来年へのひとこと・ラッキーアイテム -->
+          <article class="page" id="p3" aria-label="3ページ目">
+            <p class="f-line" id="fLine"></p>
+            <p class="label">来年へのひとこと</p>
+            <div class="message" id="mText"></div>
+            <div class="divider"></div>
+            <p class="label">ラッキーアイテム</p>
+            <div class="lucky">
+              <div class="lucky-icon" id="lIcon"></div>
+              <p class="lucky-name" id="lName"></p>
+              <p class="lucky-mean" id="lMean"></p>
+            </div>
+            <p class="merry">Merry Christmas</p>
+          </article>
+        </div>
+      </div>
+      <nav class="page-nav" aria-label="ページ">
+        <button type="button" class="nav-arrow" id="prevPage" aria-label="前のページ">‹</button>
+        <div class="dots" id="dots"></div>
+        <button type="button" class="nav-arrow" id="nextPage" aria-label="次のページ">›</button>
+      </nav>
+
+      <div class="result-actions" id="drawActions">
+        <div class="row primary">
+          <button type="button" class="btn-gold small" id="againBtn"><span>もう一度、魔法の旅へ</span></button>
+          <button type="button" class="btn-ruby" id="giftBtn"><span>友だちに贈る</span></button>
+        </div>
+        <div class="row secondary">
+          <button type="button" class="btn-line" id="saveBtn">カードを保存する</button>
+          <button type="button" class="btn-line" id="bookBtnResult">スタンプ帳を見る</button>
+          <button type="button" class="btn-line" id="homeBtn">最初の画面へ</button>
+        </div>
+        <p class="gift-hint">「友だちに贈る」を押すと、結果の文章がコピーされます。<br>LINEやDiscordに貼りつけて贈れます。</p>
+      </div>
+      <div class="result-actions" id="infoActions" hidden>
+        <div class="row primary">
+          <button type="button" class="btn-gold small" id="backToBook"><span>スタンプ帳にもどる</span></button>
+        </div>
+        <div class="row secondary">
+          <button type="button" class="btn-line" id="homeBtn2">最初の画面へ</button>
+        </div>
+      </div>
+      <p class="footnote">※各国のクリスマスの習わしは代表的な一例です。地域や家庭によってさまざまです。</p>
+    </div>
+  </section>
+
+  <!-- スタンプ帳 -->
+  <section id="book" class="screen" aria-labelledby="bookTitle" hidden>
+    <div class="journal">
+      <div class="cover">
+        <svg class="cover-orn" viewBox="0 0 220 30" aria-hidden="true"><path d="M10 15H90M130 15H210" stroke="currentColor" stroke-width=".8"/><path d="M90 15Q100 4 110 15Q120 26 130 15" fill="none" stroke="currentColor" stroke-width=".8"/><circle cx="110" cy="15" r="3" fill="currentColor"/></svg>
+        <h2 id="bookTitle">クリスマス旅のスタンプ帳</h2>
+        <p class="cover-en">A Christmas Travel Journal</p>
+      </div>
+      <div class="paper">
+        <p class="progress-text" id="progressText"></p>
+        <div class="progress" role="progressbar" aria-valuemin="0" id="progressBar"><span id="progressFill"></span></div>
+        <button type="button" class="btn-gold small tour-btn" id="tourBtn" hidden><span>世界一周の記念を見る</span></button>
+        <ul class="stamps" id="stampGrid"></ul>
+        <p class="book-hint">集めたスタンプを押すと、その国のクリスマスをもう一度楽しめます。</p>
+        <p class="book-note">※スタンプの記録は、このパソコン・スマートフォンのこのブラウザの中だけに保存されます。別の端末やブラウザには引き継がれません。ブラウザの保存データを消すと、記録も消えます。</p>
+        <button type="button" class="reset-link" id="resetBtn">スタンプ帳を最初からやり直す</button>
+      </div>
+      <div class="book-actions">
+        <button type="button" class="btn-line" id="bookBack">もどる</button>
+        <button type="button" class="btn-line" id="bookHome">最初の画面へ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 世界一周のお祝い -->
+  <section id="celebrate" class="screen" aria-labelledby="tourTitle" hidden>
+    <div class="cele-stars" id="celeStars" aria-hidden="true"></div>
+    <div class="cele-wrap">
+      <div class="globe" id="globe"></div>
+      <h2 class="tour-title" id="tourTitle"></h2>
+      <p class="tour-sub" id="tourSub"></p>
+      <ul class="tour-stamps" id="tourStamps"></ul>
+      <div class="tour-message" id="tourMsg"></div>
+      <div class="row primary">
+        <button type="button" class="btn-gold small" id="tourSave"><span>世界一周記念カードを保存する</span></button>
+      </div>
+      <div class="row secondary">
+        <button type="button" class="btn-line" id="tourClose">閉じる</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- スタンプが押される演出 -->
+  <div class="stamp-press" id="stampPress" aria-hidden="true"><div class="sp-light"></div><div class="sp-stamp" id="spStamp"></div></div>
+
+  <!-- 画面の中に出すお知らせの窓（確認・保存・コピー） -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle"></h3>
+      <p class="modal-text" id="modalText"></p>
+      <img class="modal-img" id="modalImg" alt="保存用のカードの画像" hidden>
+      <textarea class="modal-area" id="modalArea" readonly hidden></textarea>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script src="data.js"></script>
+<script src="art.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
