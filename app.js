@@ -1565,29 +1565,8 @@
     bindings();
     setScreen("start");
     updateStartState();
-    if (typeof tryEntrance === "function") tryEntrance(); /* お試し用（下の印のブロックを消せば、何もしません） */
   };
 
-  // === お試し用（公開前に削除） ===
-  /* アドレスの最後が #tameshi-sekai-isshu のときだけ、13か国すべて集めた状態を試せます。
-     公開する前に、この印から「お試し用ここまで」までをまるごと消してください（ほかは消さなくて大丈夫です）。 */
-  function tryEntrance() {
-    if (location.hash !== "#tameshi-sekai-isshu") return;
-    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* そのままで大丈夫です */ }
-    openModal({
-      title: "お試し",
-      text: "お試し：スタンプを13か国すべて集めた状態にしますか？（本番の記録が上書きされます）",
-      buttons: [{ label: "いいえ", value: false }, { label: "はい", value: true, primary: true }]
-    }).then((ok) => {
-      if (!ok) return;
-      C.forEach((c) => stamps.add(c.id));
-      store.celebrated = true; store.goldenDrawn = false; store.secretRevealed = false; store.goldenMsg = -1;
-      saveStore(); updateStartState();
-      Audio.unlock();
-      openCelebration("start");
-    });
-  }
-  // === お試し用ここまで ===
 
   init();
 })();
