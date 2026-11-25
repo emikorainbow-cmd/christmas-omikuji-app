@@ -43,6 +43,9 @@
       <img class="scene sc2" src="images/scene2-box-open.webp" width="941" height="1672" alt="" aria-hidden="true">
       <img class="scene sc3" src="images/scene3-card-rising.webp" width="941" height="1672" alt="" aria-hidden="true">
 
+      <!-- 世界一周のごほうび：夜空にゆれるオーロラ（13か国そろったあとだけ） -->
+      <div class="aurora" aria-hidden="true"><i class="au1"></i><i class="au2"></i><i class="au3"></i></div>
+
       <!-- 絵に重ねる光（位置は絵の上の座標でぴったり合わせています） -->
       <svg class="lights" viewBox="0 0 941 1672" preserveAspectRatio="none" aria-hidden="true">
         <defs>
@@ -60,6 +63,13 @@
         <g class="lamps" id="lamps"></g>
         <!-- 夜空の星のきらめき -->
         <g class="glints" id="glints"></g>
+
+        <!-- 黄金の箱：世界一周したあとの、箱をつつむ金の光 -->
+        <g class="golden-aura" id="goldenAura">
+          <ellipse class="ga-halo" cx="420" cy="1060" rx="400" ry="330" fill="url(#halo)"/>
+          <ellipse class="ga-core" cx="420" cy="1090" rx="260" ry="150" fill="url(#warm)"/>
+          <g class="ga-sparks" id="goldenSparks"></g>
+        </g>
 
         <!-- ふたの隙間の光（シーン1） -->
         <g class="seam">
@@ -97,9 +107,10 @@
       <p class="subtitle-en">A Magical Christmas Journey</p>
     </header>
     <div class="start-actions">
+      <p class="golden-note" id="goldenNote" hidden>世界一周したあなたへ、特別な贈り物が一度だけ届きます</p>
       <button type="button" class="btn-gold" id="openBtn">
         <svg class="orn" viewBox="0 0 40 12" aria-hidden="true"><path d="M2 6H26M26 6Q31 1 36 6Q31 11 26 6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="38" cy="6" r="1.4" fill="currentColor"/></svg>
-        <span>魔法の箱を開ける</span>
+        <span id="openLabel">魔法の箱を開ける</span>
         <svg class="orn flip" viewBox="0 0 40 12" aria-hidden="true"><path d="M2 6H26M26 6Q31 1 36 6Q31 11 26 6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="38" cy="6" r="1.4" fill="currentColor"/></svg>
       </button>
       <button type="button" class="btn-ghost" id="bookBtnStart">
@@ -136,7 +147,7 @@
               <div class="f-row">
                 <div class="f-symbol" id="fSymbol"></div>
                 <div class="f-txt">
-                  <p class="f-kicker">あなたへの贈り物</p>
+                  <p class="f-kicker" id="fKicker">あなたへの贈り物</p>
                   <h2 class="f-name" id="fName"></h2>
                   <p class="f-theme" id="fTheme"></p>
                 </div>
@@ -150,16 +161,16 @@
           </article>
           <!-- 2ページ目：その国のクリスマス -->
           <article class="page" id="p2" aria-label="2ページ目">
-            <p class="label">この国のメリークリスマス</p>
+            <p class="label" id="lblGreet">この国のメリークリスマス</p>
             <p class="greet" id="gText"></p>
             <p class="greet-read" id="gRead"></p>
             <p class="greet-lang" id="gLang"></p>
             <div class="divider"></div>
-            <p class="label">クリスマスの過ごし方</p>
+            <p class="label" id="lblCustoms">クリスマスの過ごし方</p>
             <p class="body" id="cCustoms"></p>
-            <p class="label">伝統的な料理・習慣</p>
+            <p class="label" id="lblFood">伝統的な料理・習慣</p>
             <p class="body" id="cFood"></p>
-            <p class="label">旅へのおさそい</p>
+            <p class="label" id="lblIntro">旅へのおさそい</p>
             <p class="body invite" id="cIntro"></p>
             <p class="song" id="cSong"></p>
             <p class="song-note" id="cSongNote"></p>
@@ -206,7 +217,7 @@
           <button type="button" class="btn-line" id="homeBtn2">最初の画面へ</button>
         </div>
       </div>
-      <p class="footnote">※各国のクリスマスの習わしは代表的な一例です。地域や家庭によってさまざまです。</p>
+      <p class="footnote" id="footnote">※各国のクリスマスの習わしは代表的な一例です。地域や家庭によってさまざまです。</p>
     </div>
   </section>
 
@@ -237,10 +248,14 @@
   <!-- 世界一周のお祝い -->
   <section id="celebrate" class="screen" aria-labelledby="tourTitle" hidden>
     <div class="cele-stars" id="celeStars" aria-hidden="true"></div>
+    <!-- 13か国の「メリークリスマス」が流れ星のように夜空を流れます -->
+    <div class="cele-greets" id="celeGreets" aria-hidden="true"></div>
     <div class="cele-wrap">
       <div class="globe" id="globe"></div>
       <h2 class="tour-title" id="tourTitle"></h2>
       <p class="tour-sub" id="tourSub"></p>
+      <!-- 13か国のメリークリスマス（動きひかえめのときは、流れ星のかわりにここに並べます） -->
+      <p class="greet-list" id="greetList"></p>
       <ul class="tour-stamps" id="tourStamps"></ul>
       <div class="tour-message" id="tourMsg"></div>
       <div class="row primary">

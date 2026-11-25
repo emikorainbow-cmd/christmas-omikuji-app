@@ -26,7 +26,8 @@
   const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 保存できなくても続けられます */ } };
 
   const validIds = new Set(D.countries.map((c) => c.id));
-  const store = { stamps: [], celebrated: false, lastCountry: "", lastMsg: -1, lastLucky: -1 };
+  /* goldenDrawn：黄金のおみくじを引いた／secretRevealed：ひみつの14番目が開いた／goldenMsg：そのとき届いたひとこと */
+  const store = { stamps: [], celebrated: false, lastCountry: "", lastMsg: -1, lastLucky: -1, goldenDrawn: false, secretRevealed: false, goldenMsg: -1 };
   (() => {
     const s = readJSON(STORE_KEY);
     if (s && typeof s === "object") {
@@ -35,6 +36,9 @@
       if (typeof s.lastCountry === "string") store.lastCountry = s.lastCountry;
       if (Number.isInteger(s.lastMsg)) store.lastMsg = s.lastMsg;
       if (Number.isInteger(s.lastLucky)) store.lastLucky = s.lastLucky;
+      store.goldenDrawn = !!s.goldenDrawn;
+      store.secretRevealed = !!s.secretRevealed || store.goldenDrawn;
+      if (Number.isInteger(s.goldenMsg)) store.goldenMsg = s.goldenMsg;
     } else {
       /* 前のバージョンのスタンプ（国の番号）を引き継ぐ */
       const old = readJSON(OLD_KEY);
@@ -106,6 +110,16 @@
       p.style.setProperty("--dl", (-(i * 2.3) % 9).toFixed(1) + "s");
       gg.appendChild(p);
     });
+    /* 黄金の箱のまわりで、ゆっくりまたたく金の光 */
+    const sparks = [[205, 925, 26], [760, 955, 22], [140, 1170, 18], [800, 1190, 20], [330, 850, 16], [650, 860, 18], [480, 790, 22], [560, 1330, 14], [300, 1350, 13]];
+    const sg = $("goldenSparks");
+    sparks.forEach(([x, y, s2], i) => {
+      const d = `M${x} ${y - s2}Q${x + s2 * .15} ${y - s2 * .15} ${x + s2} ${y}Q${x + s2 * .15} ${y + s2 * .15} ${x} ${y + s2}Q${x - s2 * .15} ${y + s2 * .15} ${x - s2} ${y}Q${x - s2 * .15} ${y - s2 * .15} ${x} ${y - s2}Z`;
+      const p = svgEl("path", { d, fill: "#fff3c4", class: "ga-spark" });
+      p.style.setProperty("--d", (4.5 + (i * 0.9) % 3).toFixed(1) + "s");
+      p.style.setProperty("--dl", (-(i * 1.1) % 4).toFixed(1) + "s");
+      sg.appendChild(p);
+    });
   };
 
   /* ---------------------------------------------------------------
@@ -114,6 +128,7 @@
   const FX = (() => {
     const cv = $("fx"), ctx = cv.getContext("2d");
     let W = 0, H = 0, dpr = 1, flakes = [], motes = [], mode = "idle", running = false, lastT = 0, modeT = 0, fade = 1;
+    let starOn = false, boost = 1; /* 世界一周のあと：雪の一部を小さな星に／黄金の箱：光の粒を少し多めに */
     const mkSprite = (inner, mid) => {
       const c = document.createElement("canvas"); c.width = c.height = 64;
       const x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -126,7 +141,8 @@
     const mkFlake = (L, anywhere) => {
       const l = LAYERS[L];
       return { L, x: Math.random() * W, y: anywhere ? Math.random() * H : -6, r: l[1] + Math.random() * (l[2] - l[1]),
-        vy: l[3] + Math.random() * (l[4] - l[3]), a: l[5] * (0.7 + Math.random() * 0.3), ph: Math.random() * 6.28, sw: 0.25 + Math.random() * 0.6 };
+        vy: l[3] + Math.random() * (l[4] - l[3]), a: l[5] * (0.7 + Math.random() * 0.3), ph: Math.random() * 6.28, sw: 0.25 + Math.random() * 0.6,
+        star: L > 0 && Math.random() < 0.14 };
     };
     const resize = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -151,7 +167,7 @@
       m.age = 0; m.ph = Math.random() * 6.28;
       motes.push(m);
     };
-    const target = () => (mode === "idle" ? 22 : mode === "glow" ? 42 : mode === "card" ? 90 : mode === "rise" ? 160 : 0);
+    const target = () => Math.round((mode === "idle" ? 22 : mode === "glow" ? 42 : mode === "card" ? 90 : mode === "rise" ? 160 : 0) * boost);
     const step = (dt) => {
       const t = target();
       if (mode === "rise" && modeT < 150) for (let i = 0; i < 3; i++) if (motes.length < t) spawn("rise");
@@ -172,9 +188,25 @@
         if (f.x > W + 6) f.x = -6; else if (f.x < -6) f.x = W + 6;
       }
     };
+    /* 6つの光の先をもつ、小さな星のきらめき */
+    const drawStar = (f) => {
+      const R = f.r * 2.6, r = R * 0.34, tw = 0.65 + 0.35 * Math.sin(f.ph * 3);
+      ctx.globalAlpha = Math.min(1, f.a * 1.1) * tw;
+      ctx.fillStyle = "#fff4cf";
+      ctx.beginPath();
+      for (let i = 0; i < 12; i++) {
+        const ang = f.ph * 0.4 + (i * Math.PI) / 6, rr = i % 2 ? r : R;
+        const x = f.x + Math.cos(ang) * rr, y = f.y + Math.sin(ang) * rr;
+        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = f.a * 0.35 * tw;
+      ctx.drawImage(gold, f.x - R * 1.6, f.y - R * 1.6, R * 3.2, R * 3.2);
+    };
     const drawFlakes = () => {
       for (const f of flakes) {
-        if (f.L === 2) { const s = f.r * 3.2; ctx.globalAlpha = f.a; ctx.drawImage(white, f.x - s, f.y - s, s * 2, s * 2); }
+        if (starOn && f.star) drawStar(f);
+        else if (f.L === 2) { const s = f.r * 3.2; ctx.globalAlpha = f.a; ctx.drawImage(white, f.x - s, f.y - s, s * 2, s * 2); }
         else { ctx.globalAlpha = f.a; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.283); ctx.fill(); }
       }
       ctx.globalAlpha = 1;
@@ -207,7 +239,9 @@
     const start = () => { if (running) return; running = true; lastT = 0; requestAnimationFrame(frame); };
     const stop = () => { running = false; motes = []; drawStatic(); };
     const setMode = (m) => { mode = m; modeT = 0; if (m === "idle") fade = 1; };
-    return { resize, start, stop, setMode };
+    const setStars = (on) => { starOn = !!on; if (!running) drawStatic(); };
+    const setBoost = (k) => { boost = k || 1; };
+    return { resize, start, stop, setMode, setStars, setBoost };
   })();
 
   /* ---------------------------------------------------------------
@@ -335,6 +369,35 @@
     ev.forEach((e) => { e.k = "amb"; });
     return { ev, len: 32, bpm: 62, warp: (b) => b };
   })();
+
+  /* 世界一周のお祝いのメドレー：各国の曲のはじめの数小節を、オルゴールのまま順番につなぎます。
+     曲ごとに速さがちがうので、ここで「秒」に直して1本の楽譜にします（bpm 60 = 1拍1秒で再生）。
+     前の曲の最後の音が響いているあいだに、次の曲がそっと（小さめの音から）入ってきます。 */
+  const buildMedley = (list) => {
+    const T = D.T || {}, H = D.H || {};
+    const ev = []; let off = 0;
+    list.forEach((it, n) => {
+      const full = T[it.id]; if (!full) return;
+      const last = n === list.length - 1;
+      /* はじめの it.beats 拍まで（0 なら全部） */
+      const notes = []; let b = 0;
+      for (const nt of full) { if (it.beats && b >= it.beats - 1e-6) break; notes.push(nt); b += nt[1]; }
+      const harm = (H[it.id] || []).filter(([s0]) => s0 < b - 1e-6);
+      const seq = arrange(notes, harm);
+      const spb = 60 / (it.bpm || 150);
+      let lastOn = 0;
+      seq.ev.forEach((e) => { if (e.k === "mel") lastOn = Math.max(lastOn, e.b); });
+      seq.ev.forEach((e) => {
+        if (!last && e.k === "tw" && e.b > lastOn) return; /* 途中の曲の終わりのきらめきは省きます */
+        let v = e.v;
+        if (n > 0 && e.b < 1.5) v *= 0.72 + 0.28 * (e.b / 1.5); /* 入りはそっと */
+        ev.push({ b: off + seq.warp(e.b) * spb, m: e.m, v, k: e.k });
+      });
+      off += seq.warp(b) * spb + (last ? 0 : 0.35);
+    });
+    ev.sort((x, y) => x.b - y.b);
+    return { ev, len: off + 1.5, warp: (x) => x };
+  };
 
   const Audio = (() => {
     let ctx = null, input = null, ambBus = null, tuneBus = null, sfxBus = null, noise = null;
@@ -500,19 +563,33 @@
       try { const T = D.T || {}, H = D.H || {}; for (const k in T) if (T[k] === notes) return H[k] || null; } catch (e) { /* なし */ }
       return null;
     };
-    /* 国の曲：背景の音をそっと小さくしてから流し、終わったら背景の音にもどす */
-    const playTune = (notes, bpm) => {
+    /* 曲（楽譜を編曲したもの）を流す：背景の音をそっと小さくしてから流し、終わったら背景の音にもどす */
+    const playSeq = (seq, bpm) => {
       try {
         clearTimeout(resumeTimer);
         if (!prefs.sound || !ensure()) return;
         stopTune(0.4);
         stopAmbient(0.9);
-        const seq = arrange(notes, harmonyOf(notes));
         const me = player(seq, bpm, tuneBus, false, () => {
           if (tune === me) { tune = null; resumeTimer = setTimeout(() => startAmbient(3), 600); }
         });
         tune = me;
       } catch (e) { /* 音なしで続けます */ }
+    };
+    /* 国の曲 */
+    const playTune = (notes, bpm) => { try { playSeq(arrange(notes, harmonyOf(notes)), bpm); } catch (e) { /* 音なしで続けます */ } };
+    /* 世界一周のメドレー（1拍＝1秒に直してあるので bpm 60） */
+    let medleySeq = null;
+    const playMedley = (list) => {
+      try { if (!medleySeq) medleySeq = buildMedley(list); playSeq(medleySeq, 60); } catch (e) { /* 音なしで続けます */ }
+    };
+    /* 今の曲をそっと止めて、少ししてから背景の音にもどす（お祝いの画面を閉じたときなど） */
+    const endTune = (f) => {
+      if (!tune || tune.done) return;
+      const fade = f == null ? 1.2 : f;
+      clearTimeout(resumeTimer);
+      stopTune(fade);
+      if (prefs.sound) resumeTimer = setTimeout(() => startAmbient(3), fade * 1000 + 300);
     };
     /* ガラスの鈴（グロッケン／チェレスタのような、倍音がずれた澄んだ音） */
     const bell = (when, base, vol) => {
@@ -553,7 +630,7 @@
     };
     const suspend = () => { try { if (ctx && ctx.state === "running") ctx.suspend().catch(() => {}); } catch (e) { /* なにもしない */ } };
     const resume = () => { try { if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {}); } catch (e) { /* なにもしない */ } };
-    return { unlock, startAmbient, playTune, chime, bell, sparkle, allOff, suspend, resume, get ready() { return !!ctx; } };
+    return { unlock, startAmbient, playTune, playMedley, endTune, chime, bell, sparkle, allOff, suspend, resume, get ready() { return !!ctx; } };
   })();
 
   /* ---------------------------------------------------------------
@@ -590,10 +667,39 @@
   };
 
   /* ---------------------------------------------------------------
+     世界一周のあとのひみつ
+     ・黄金の特別なおみくじ（一度だけ）
+     ・ひみつの14番目の旅先「北極星の村」
+     --------------------------------------------------------------- */
+  const SECRET = D.secret, GOLD = D.golden;
+  const tourDone = () => stamps.size >= C.length;
+  const goldenReady = () => tourDone() && !store.goldenDrawn;
+  /* 黄金のおみくじの結果（i：特別なひとことの番号。同じ結果を何度でも作り直せます） */
+  const goldenResult = (i) => {
+    const n = GOLD.messages.length;
+    const mi = Number.isInteger(i) && i >= 0 && i < n ? i : Math.floor(Math.random() * n);
+    return { mode: "draw", golden: true, fortune: GOLD.fortune, country: SECRET, message: { text: GOLD.messages[mi] }, lucky: GOLD.lucky, mi, li: -1, isNew: false };
+  };
+  /* 最初の画面を、世界一周のあとの「特別な夜」に（オーロラ・星の雪・黄金の箱） */
+  const updateStartState = () => {
+    const done = tourDone(), gold = goldenReady();
+    app.classList.toggle("tour-done", done);
+    app.classList.toggle("golden", gold);
+    app.classList.toggle("golden-settled", done && !gold);
+    fill($("openLabel"), gold ? "黄金の箱を開ける" : "魔法の箱を開ける");
+    $("openBtn").classList.toggle("golden-btn", gold);
+    $("goldenNote").hidden = !gold;
+    FX.setStars(done);
+    FX.setBoost(gold ? 1.5 : 1);
+  };
+
+  /* ---------------------------------------------------------------
      画面の切りかえ
      --------------------------------------------------------------- */
   const screens = { result: $("result"), book: $("book"), celebrate: $("celebrate") };
   const setScreen = (name) => {
+    /* お祝いの画面を離れるとき：流れ星とメドレーをそっと止める */
+    if (app.dataset.screen === "celebrate" && name !== "celebrate") { Meteors.stop(); Audio.endTune(1.2); }
     app.dataset.screen = name;
     Object.keys(screens).forEach((k) => { screens[k].hidden = k !== name; });
   };
@@ -609,12 +715,22 @@
   const later = (ms, fn) => { seqTimers.push(setTimeout(fn, ms)); };
   const clearSeq = () => { seqTimers.forEach(clearTimeout); seqTimers = []; };
 
+  /* 第2・3幕の言葉（黄金のときは特別な言葉に） */
+  const setSeqText = (golden) => {
+    const t = $("seqText"); t.textContent = "";
+    const [a, b] = golden ? ["世界一周したあなたへ", "特別な贈り物が届きました。"] : ["世界のどこかから", "あなたへの贈り物が届きました。"];
+    t.append(document.createTextNode(a), document.createElement("br"), document.createTextNode(b));
+  };
   const startJourney = () => {
     if (busy || app.dataset.screen !== "start") return;
     busy = true;
     $("openBtn").disabled = true;
     Audio.unlock();
-    pending = drawResult();
+    const gold = goldenReady();
+    pending = gold ? goldenResult() : drawResult();
+    app.classList.toggle("golden-run", gold);
+    if (gold) { FX.setBoost(1.6); later(700, () => Audio.bell(0, 2637, 0.16)); }
+    setSeqText(gold);
     $("seqText").classList.remove("show");
     setScreen("seq");
     if (isCalm()) {
@@ -643,7 +759,7 @@
     /* ズームを一瞬でもとにもどす（結果の画面の後ろで） */
     const inner = $("stageInner");
     inner.style.transition = "none";
-    app.classList.remove("zooming", "untie", "act-glow", "act2");
+    app.classList.remove("zooming", "untie", "act-glow", "act2", "golden-run");
     app.classList.add("act3");
     setScene(3);
     void inner.offsetWidth;
@@ -654,9 +770,10 @@
   const goHome = () => {
     if (app.dataset.screen === "seq") return;
     clearSeq();
-    app.classList.remove("act2", "act3", "act-glow", "untie", "zooming");
+    app.classList.remove("act2", "act3", "act-glow", "untie", "zooming", "golden-run");
     setScene(1);
     setScreen("start");
+    updateStartState();
     FX.setMode("idle");
     busy = false;
     $("openBtn").disabled = false;
@@ -671,22 +788,32 @@
   const isLatin = (s) => /^[\u0000-ɏ\s!¡'’.,-]+$/.test(s);
   const fill = (el, text) => { el.textContent = text; };
 
+  /* ページの見出し（ひみつの旅先では、その村のための言葉に） */
+  const LABELS = { greet: "この国のメリークリスマス", customs: "クリスマスの過ごし方", food: "伝統的な料理・習慣", intro: "旅へのおさそい" };
+  const FOOT = "※各国のクリスマスの習わしは代表的な一例です。地域や家庭によってさまざまです。";
+  const FOOT_SECRET = "※「北極星の村」は、昔から物語の中で語り継がれてきた伝説の村です。実在する場所ではありません。";
   const renderCard = (res) => {
     const c = res.country, info = res.mode === "info";
     $("card").classList.toggle("info-mode", info);
+    $("card").classList.toggle("golden", !!res.golden);
+    $("card").classList.toggle("secret", !!c.secret);
+    const lb = c.labels || LABELS;
+    fill($("lblGreet"), lb.greet); fill($("lblCustoms"), lb.customs); fill($("lblFood"), lb.food); fill($("lblIntro"), lb.intro);
+    fill($("footnote"), c.secret ? FOOT_SECRET : FOOT);
     if (!info) {
+      fill($("fKicker"), res.golden ? "世界一周の特別な贈り物" : "あなたへの贈り物");
       $("fSymbol").innerHTML = A.fortuneSymbol(res.fortune.symbol);
       fill($("fName"), res.fortune.name);
       fill($("fTheme"), res.fortune.theme);
       fill($("fLine"), "〈" + res.fortune.name + "〉" + res.fortune.line);
     }
-    fill($("destLabel"), info ? "クリスマスの旅先" : "あなたに届いたクリスマスの旅先");
+    fill($("destLabel"), c.secret ? "あなただけの、ひみつの旅先" : info ? "クリスマスの旅先" : "あなたに届いたクリスマスの旅先");
     fill($("cFlag"), c.flag);
     fill($("cName"), c.name);
     const city = $("cCity"); city.textContent = "";
-    const b = document.createElement("b"); b.textContent = c.city;
-    const en = document.createElement("i"); en.textContent = c.cityEn + ", " + c.nameEn;
-    city.append(b, document.createTextNode(" "), en);
+    const b = document.createElement("b"); b.textContent = c.secret ? c.legend : c.city;
+    const en = document.createElement("i"); en.textContent = c.secret ? c.cityEn : c.cityEn + ", " + c.nameEn;
+    city.append(b, document.createTextNode(c.secret ? "　" : " "), en);
     const land = $("landscape"); land.textContent = "";
     const putArt = () => { land.innerHTML = A.postcard(c); };
     if (c.image) {
@@ -697,7 +824,7 @@
       img.src = c.image;
       land.appendChild(img);
     } else putArt();
-    land.setAttribute("aria-label", c.city + "のクリスマスの風景（イラスト）");
+    land.setAttribute("aria-label", c.secret ? "オーロラの下の、雪の小さな村の風景（物語のイラスト）" : c.city + "のクリスマスの風景（イラスト）");
 
     const g = $("gText"); g.textContent = c.greeting; g.classList.toggle("cjk", !isLatin(c.greeting));
     const r = $("gRead"); r.textContent = c.reading ? "（" + c.reading + "）" : ""; r.hidden = !c.reading;
@@ -774,6 +901,17 @@
 
   const showResult = (res) => {
     lastDraw = res;
+    if (res.golden) {
+      /* 黄金のおみくじ：一度きり。結果を覚えておき、ひみつの旅先もここで開きます */
+      const first = !store.secretRevealed;
+      store.goldenDrawn = true; store.secretRevealed = true; store.goldenMsg = res.mi;
+      saveStore();
+      showCard(res);
+      if (first) later(1300, () => pressStamp(SECRET, true));
+      else toast("世界一周したあなたへ、奇跡の大吉が届きました。", 4200);
+      setTimeout(() => { busy = false; $("openBtn").disabled = false; }, 400);
+      return;
+    }
     store.lastCountry = res.country.id; store.lastMsg = res.mi; store.lastLucky = res.li;
     showCard(res);
     if (res.isNew) {
@@ -786,12 +924,14 @@
   };
 
   /* 新しいスタンプが押される演出 */
-  const pressStamp = (c) => {
+  const pressStamp = (c, isSecret) => {
     const box = $("stampPress");
-    $("spStamp").innerHTML = A.stamp(c, C.indexOf(c), { got: true });
+    $("spStamp").innerHTML = isSecret ? A.secretStamp(c, true) : A.stamp(c, C.indexOf(c), { got: true });
+    box.classList.toggle("secret", !!isSecret);
     box.classList.remove("show"); void box.offsetWidth; box.classList.add("show");
     Audio.bell(0.1, 1567.98, 0.32); Audio.bell(0.32, 2093, 0.18);
-    toast("新しいクリスマスの旅先がスタンプ帳に加わりました！");
+    if (isSecret) { Audio.bell(0.55, 2637, 0.14); toast("ひみつの旅先「" + c.name + "」が、スタンプ帳に加わりました。"); }
+    else toast("新しいクリスマスの旅先がスタンプ帳に加わりました！");
     setTimeout(() => box.classList.remove("show"), 2600);
   };
 
@@ -820,10 +960,15 @@
       }
       btn.append(art, nm); li.appendChild(btn); grid.appendChild(li);
     });
+    if (tourDone()) grid.appendChild(secretSlot());
     const n = stamps.size, total = C.length;
     const pt = $("progressText"); pt.textContent = "";
     const bn = document.createElement("b"); bn.textContent = String(n);
     pt.append(document.createTextNode("あなたのクリスマスの旅　"), bn, document.createTextNode(" / " + total + "か国"));
+    if (tourDone() && store.secretRevealed) {
+      const badge = document.createElement("span"); badge.className = "secret-badge"; badge.textContent = "＋ひみつの旅先";
+      pt.append(badge);
+    }
     $("progressFill").style.width = (total ? (n / total) * 100 : 0) + "%";
     const pb = $("progressBar"); pb.setAttribute("aria-valuemax", String(total)); pb.setAttribute("aria-valuenow", String(n)); pb.setAttribute("aria-label", "集めた国の数");
     $("tourBtn").hidden = n < total;
@@ -837,6 +982,97 @@
     screens.book.scrollTop = 0;
   };
   const openInfo = (c) => { showCard({ mode: "info", country: c }); };
+
+  /* ひみつの14番目のページ（世界一周したあとだけ、スタンプ帳のいちばん最後に） */
+  let revealing = false;
+  const secretSlot = () => {
+    const open = store.secretRevealed;
+    const li = document.createElement("li"); li.className = "secret-li";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "stamp-btn secret-btn" + (open ? " open" : "");
+    const art = document.createElement("div"); art.className = "stamp-art"; art.innerHTML = A.secretStamp(SECRET, open);
+    const tx = document.createElement("div"); tx.className = "secret-txt";
+    const k = document.createElement("p"); k.className = "secret-kicker"; k.textContent = "No.14 ― ひみつの旅先";
+    const nm = document.createElement("p"); nm.className = "secret-name"; nm.textContent = open ? SECRET.name : "？";
+    const cap = document.createElement("p"); cap.className = "secret-cap";
+    cap.textContent = open ? SECRET.legend : "世界一周したあなただけの、ひみつの旅先";
+    const hint = document.createElement("p"); hint.className = "secret-hint";
+    hint.textContent = open ? (store.goldenDrawn ? "押すと、奇跡の大吉のカードをもう一度見られます" : "押すと、北極星の村をもう一度見られます") : "押して、ひみつの旅先を開いてみましょう";
+    tx.append(k, nm, cap, hint);
+    btn.setAttribute("aria-label", open ? "ひみつの旅先、" + SECRET.name + "のスタンプ。" + hint.textContent : "ひみつの旅先のスタンプ。押すと、世界一周したあなただけの旅先が開きます");
+    btn.addEventListener("click", () => { if (revealing) return; if (store.secretRevealed) openSecret(); else revealSecret(); });
+    btn.append(art, tx); li.appendChild(btn);
+    return li;
+  };
+  /* ひみつの旅先を見る（黄金のおみくじを引いたあとは、そのカードをまるごと） */
+  const openSecret = () => {
+    if (store.goldenDrawn) { const res = goldenResult(store.goldenMsg); lastDraw = res; showCard(res); }
+    else openInfo(SECRET);
+  };
+  /* はじめて開くとき：金のスタンプが押されてから、北極星の村のカードへ */
+  const revealSecret = () => {
+    if (revealing || store.secretRevealed || !tourDone()) return;
+    revealing = true;
+    Audio.unlock();
+    store.secretRevealed = true; saveStore();
+    renderBook();
+    pressStamp(SECRET, true);
+    setTimeout(() => {
+      revealing = false;
+      if (app.dataset.screen === "book") openSecret();
+    }, isCalm() ? 1900 : 2700);
+  };
+
+  /* ---------------------------------------------------------------
+     13か国の「メリークリスマス」の流れ星
+     夜空を、金の尾をひいて1つずつ流れていきます（重ならないよう高さをずらして）。
+     ひととおり流れたら少し休んで、こんどはゆっくりくり返します。
+     --------------------------------------------------------------- */
+  const Meteors = (() => {
+    let timer = 0, idx = 0, round = 0, lane = 0;
+    const ORDER = [0, 2, 4, 1, 3, 5]; /* 高さの順番（となり合う段が続かないように） */
+    const layer = () => $("celeGreets");
+    /* 流れる空の範囲：画面の上（右上のボタンの下）から、お祝いの見出しの少し上まで */
+    const band = () => {
+      const top = 62, title = $("tourTitle").getBoundingClientRect().top;
+      return { top, h: Math.min(window.innerHeight * 0.55, title - 58 - 34) - top }; /* 34：流れながら少し下がる分 */
+    };
+    const spawn = () => {
+      const bd = band();
+      if (bd.h < 40) return false; /* 下までスクロールしているあいだは、お休み */
+      const lanes = Math.max(1, Math.min(6, Math.floor(bd.h / 44) + 1));
+      const slot = ORDER.filter((n) => n < lanes)[lane % lanes];
+      const c = C[idx % C.length];
+      const el = document.createElement("div"); el.className = "meteor";
+      const g = document.createElement("span"); g.className = "m-greet" + (isLatin(c.greeting) ? "" : " cjk"); g.textContent = c.greeting;
+      const r = document.createElement("span"); r.className = "m-read"; r.textContent = (c.reading ? c.reading + "・" : "") + c.name;
+      el.append(g, r);
+      el.style.top = Math.round(bd.top + (lanes > 1 ? (bd.h * slot) / (lanes - 1) : 0)) + "px";
+      const vw = window.innerWidth;
+      const dur = Math.max(4.4, Math.min(7.5, vw / 150 + 1.8)) * (round ? 1.15 : 1);
+      el.style.setProperty("--dur", dur.toFixed(2) + "s");
+      el.addEventListener("animationend", () => el.remove());
+      layer().appendChild(el);
+      /* 右上から左下へ、ゆるやかに流れる向きと距離（尾の傾きも合わせます） */
+      const dx = vw + el.offsetWidth + 40, dy = Math.round(Math.min(34, bd.h * 0.2 + 12));
+      el.style.setProperty("--dx", -dx + "px");
+      el.style.setProperty("--dy", dy + "px");
+      el.style.setProperty("--ang", (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1) + "deg");
+      setTimeout(() => el.remove(), dur * 1000 + 1500); /* 念のため */
+      idx++; lane++;
+      return true;
+    };
+    const tick = () => {
+      if (app.dataset.screen !== "celebrate" || isCalm()) { stop(); return; }
+      if (!spawn()) { timer = setTimeout(tick, 700); return; }
+      let wait = round ? 1500 + Math.random() * 500 : 800 + Math.random() * 400;
+      if (idx % C.length === 0) { round++; wait = 3600; } /* 13か国ひとめぐりしたら、ひと休み */
+      timer = setTimeout(tick, wait);
+    };
+    const start = () => { stop(); if (isCalm()) return; idx = 0; round = 0; lane = 0; timer = setTimeout(tick, 900); };
+    const stop = () => { clearTimeout(timer); timer = 0; const l = layer(); if (l) l.textContent = ""; };
+    return { start, stop };
+  })();
 
   /* ---------------------------------------------------------------
      世界一周のお祝い
@@ -878,10 +1114,18 @@
         st.appendChild(s);
       }
     }
+    /* 13か国の言葉（動きひかえめのときは、ここに静かに並べます。読み上げにも使われます） */
+    const gl = $("greetList"); gl.textContent = "";
+    C.forEach((c, i) => {
+      const sp = document.createElement("span"); sp.textContent = c.greeting;
+      if (i) gl.appendChild(document.createTextNode("　✦　"));
+      gl.appendChild(sp);
+    });
     setScreen("celebrate");
     screens.celebrate.scrollTop = 0;
+    Meteors.start();
     Audio.chime();
-    Audio.playTune(W.tune, W.bpm);
+    if (W.medley && W.medley.length) Audio.playMedley(W.medley); else Audio.playTune(W.tune, W.bpm);
   };
 
   /* ---------------------------------------------------------------
@@ -928,7 +1172,8 @@
     const c = res.country, L = [];
     L.push("🎄 世界のクリスマス旅おみくじ 🎄", "");
     L.push("✨ あなたへの贈り物：" + res.fortune.name, "");
-    L.push(c.flag + " 今回の旅先：" + c.name, "");
+    if (res.golden) L.push("🌟 世界一周したあなたへの、特別なおみくじ", "");
+    L.push(c.flag + " " + (c.secret ? "ひみつの旅先：" + c.name + "（" + c.legend + "）" : "今回の旅先：" + c.name), "");
     L.push(c.greeting);
     if (c.reading) L.push("（" + c.reading + "）");
     L.push("", c.shareLine, "");
@@ -1023,7 +1268,7 @@
 
   const renderCardCanvas = async (res) => {
     const c = res.country, f = res.fortune, L = res.lucky;
-    await loadFonts([f.name, f.theme, c.name, c.nameEn, c.city, c.cityEn, res.message.text, L.name, L.meaning, c.flag, "世界のクリスマス旅おみくじ ― ・（）"]);
+    await loadFonts([f.name, f.theme, c.name, c.nameEn, c.city, c.cityEn, c.legend || "", res.message.text, L.name, L.meaning, c.flag, "世界のクリスマス旅おみくじ ― ・（）世界一周したあなたへ"]);
     const W = 1086, H = 1448;
     const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
@@ -1032,9 +1277,16 @@
     ctx.textBaseline = "alphabetic";
 
     let y = 214;
-    try { const sym = await loadImg(A.toDataUrl(A.fortuneSymbol(f.symbol))); ctx.drawImage(sym, 543 - 50, y, 100, 100); } catch (e) { /* シンボルなしでも続けます */ }
+    /* 奇跡の大吉は、シンボルを少し小さくして上に添え書きを入れます */
+    const symS = res.golden ? 84 : 100, symY = res.golden ? 238 : y;
+    try { const sym = await loadImg(A.toDataUrl(A.fortuneSymbol(f.symbol))); ctx.drawImage(sym, 543 - symS / 2, symY, symS, symS); } catch (e) { /* シンボルなしでも続けます */ }
     y += 156;
-    centerText(ctx, f.name, y, "800 54px " + SERIF, "#9e1f30");
+    if (res.golden) {
+      centerText(ctx, "世界一周したあなたへ", 230, "700 19px " + ROUND, "#9a6c1c");
+      const gr = ctx.createLinearGradient(0, y - 50, 0, y + 6);
+      gr.addColorStop(0, "#c99a3a"); gr.addColorStop(0.5, "#9a6a14"); gr.addColorStop(1, "#7a520e");
+      centerText(ctx, f.name, y, "800 54px " + SERIF, gr);
+    } else centerText(ctx, f.name, y, "800 54px " + SERIF, "#9e1f30");
     y += 40;
     centerText(ctx, "― " + f.theme + " ―", y, "600 25px " + SERIF, "#7c5a22");
     y += 24;
@@ -1047,15 +1299,17 @@
     const flagW = ctx.measureText(c.flag).width;
     const startX = 543 - (flagW + 14 + nameW) / 2;
     ctx.textAlign = "left";
-    ctx.fillStyle = "#2b2016";
+    ctx.fillStyle = c.secret ? "#b4862c" : "#2b2016";
     ctx.fillText(c.flag, startX, y);
+    ctx.fillStyle = "#2b2016";
     ctx.font = "800 44px " + SERIF;
     ctx.fillText(c.name, startX + flagW + 14, y);
     y += 38;
-    centerText(ctx, c.city + "　·　" + c.cityEn + "　·　" + c.nameEn, y, "italic 500 25px " + LATIN, "#7a5a32");
+    centerText(ctx, c.secret ? c.legend : c.city + "　·　" + c.cityEn + "　·　" + c.nameEn, y, (c.secret ? "600 22px " + SERIF : "italic 500 25px " + LATIN), "#7a5a32");
     y += 22;
     /* 風景 */
-    const lw = 440, lh = 330, lx = 543 - lw / 2;
+    /* 奇跡の大吉は「来年へのひとこと」が長いので、風景を少し小さくして文章の場所を広げます */
+    const lh = res.golden ? 285 : 330, lw = Math.round(lh * 4 / 3), lx = 543 - lw / 2;
     ctx.save();
     ctx.shadowColor = "rgba(60,40,10,.3)"; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
     roundRect(ctx, lx - 7, y - 7, lw + 14, lh + 14, 18); ctx.fillStyle = "#fbf6ea"; ctx.fill();
@@ -1079,12 +1333,13 @@
     y += 14;
     /* メッセージ（長さに合わせて文字の大きさを調整） */
     let fs = 27, lines, lhgt;
-    const msgMaxH = 220;
+    const msgMaxH = res.golden ? 265 : 220;
     for (;;) {
       ctx.font = "600 " + fs + "px " + SERIF;
       lines = wrap(ctx, res.message.text, 690);
       lhgt = Math.round(fs * 1.62);
-      if (lines.length * lhgt <= msgMaxH || fs <= 19) break;
+      /* 最後の行がラッキーアイテム（アイコンの上端）にかからない大きさまで小さくします */
+      if ((lines.length <= 4 && lines.length * lhgt <= msgMaxH) || lhgt * 0.8 + (lines.length - 1) * lhgt <= msgMaxH - 52 || fs <= 18) break;
       fs -= 1;
     }
     ctx.fillStyle = "#2e2218"; ctx.textAlign = "left";
@@ -1214,6 +1469,7 @@
     document.body.classList.toggle("calm", calm);
     $("motionBtn").setAttribute("aria-pressed", String(!!prefs.calm));
     if (calm) FX.stop(); else FX.start();
+    if (app.dataset.screen === "celebrate") { if (calm) Meteors.stop(); else Meteors.start(); }
   };
 
   /* ---------------------------------------------------------------
@@ -1245,6 +1501,7 @@
     $("tourBtn").addEventListener("click", () => openCelebration("book"));
     $("tourClose").addEventListener("click", () => {
       if (celeFrom === "result" && lastDraw) showCard(lastDraw, { music: false });
+      else if (celeFrom === "start") goHome();
       else openBook(bookFrom);
     });
     $("tourSave").addEventListener("click", () => saveWith(renderTourCanvas, "world-tour-card.png"));
@@ -1255,7 +1512,9 @@
         buttons: [{ label: "やめる", value: false }, { label: "最初からやり直す", value: true, primary: true }]
       });
       if (!ok) return;
-      stamps.clear(); store.celebrated = false; saveStore(); renderBook();
+      stamps.clear(); store.celebrated = false;
+      store.goldenDrawn = false; store.secretRevealed = false; store.goldenMsg = -1;
+      saveStore(); renderBook(); updateStartState();
       toast("スタンプ帳を新しくしました。また世界のクリスマスへ出かけましょう。");
     });
     $("soundBtn").addEventListener("click", () => {
@@ -1305,6 +1564,30 @@
     FX.setMode("idle");
     bindings();
     setScreen("start");
+    updateStartState();
+    if (typeof tryEntrance === "function") tryEntrance(); /* お試し用（下の印のブロックを消せば、何もしません） */
   };
+
+  // === お試し用（公開前に削除） ===
+  /* アドレスの最後が #tameshi-sekai-isshu のときだけ、13か国すべて集めた状態を試せます。
+     公開する前に、この印から「お試し用ここまで」までをまるごと消してください（ほかは消さなくて大丈夫です）。 */
+  function tryEntrance() {
+    if (location.hash !== "#tameshi-sekai-isshu") return;
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* そのままで大丈夫です */ }
+    openModal({
+      title: "お試し",
+      text: "お試し：スタンプを13か国すべて集めた状態にしますか？（本番の記録が上書きされます）",
+      buttons: [{ label: "いいえ", value: false }, { label: "はい", value: true, primary: true }]
+    }).then((ok) => {
+      if (!ok) return;
+      C.forEach((c) => stamps.add(c.id));
+      store.celebrated = true; store.goldenDrawn = false; store.secretRevealed = false; store.goldenMsg = -1;
+      saveStore(); updateStartState();
+      Audio.unlock();
+      openCelebration("start");
+    });
+  }
+  // === お試し用ここまで ===
+
   init();
 })();

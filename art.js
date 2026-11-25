@@ -86,6 +86,20 @@ window.XMAS_ART = (function () {
         <path d="M40 84c-6-5-12-3-13 2c5 0 8 2 9 5c2-3 4-5 4-7z" fill="${EMER}" stroke="#123f2e" stroke-width=".8"/>
         <circle cx="42" cy="86" r="2.6" fill="#c8323c"/>
         ${sparkle(80, 18, 4.5, `url(#${g})`)}${sparkle(86, 40, 3, `url(#${g})`)}${sparkle(18, 56, 3, `url(#${g})`)}`;
+    } else if (kind === "miracle") {
+      /* 奇跡の大吉：光の冠をいただいた、八つの光の星（細い線の光線つき） */
+      let rays = "";
+      for (let i = 0; i < 16; i++) {
+        const a = (i * Math.PI) / 8 + Math.PI / 16, r0 = 33, r1 = i % 2 ? 40 : 45;
+        rays += `<line x1="${f1(50 + Math.cos(a) * r0)}" y1="${f1(58 + Math.sin(a) * r0)}" x2="${f1(50 + Math.cos(a) * r1)}" y2="${f1(58 + Math.sin(a) * r1)}" stroke="${st}" stroke-width=".7" stroke-linecap="round" opacity=".75"/>`;
+      }
+      body = `<circle cx="50" cy="58" r="29" fill="none" stroke="${st}" stroke-width=".6" stroke-dasharray="1 3" opacity=".7"/>${rays}
+        <polygon points="${starPts(50, 58, 8, 27, 10)}" fill="url(#${g})" stroke="${st}" stroke-width="1.1" stroke-linejoin="round"/>
+        <polygon points="${starPts(50, 58, 4, 15, 5, -Math.PI / 4)}" fill="#fff6d6" fill-opacity=".55" stroke="${st}" stroke-width=".7"/>
+        <circle cx="50" cy="58" r="4.2" fill="${PEARL}" stroke="${st}" stroke-width="1"/>
+        <path d="M37 22L39.5 12L44.5 18L50 8L55.5 18L60.5 12L63 22Q50 18.5 37 22Z" fill="url(#${g})" fill-opacity=".9" stroke="${st}" stroke-width=".9" stroke-linejoin="round"/>
+        <circle cx="39.5" cy="11" r="1.5" fill="${PEARL}" stroke="${st}" stroke-width=".6"/><circle cx="50" cy="6.6" r="1.8" fill="${PEARL}" stroke="${st}" stroke-width=".6"/><circle cx="60.5" cy="11" r="1.5" fill="${PEARL}" stroke="${st}" stroke-width=".6"/>
+        ${sparkle(15, 30, 4, `url(#${g})`)}${sparkle(86, 34, 3.4, `url(#${g})`)}${sparkle(84, 88, 3, `url(#${g})`)}${sparkle(16, 86, 2.6, `url(#${g})`)}`;
     } else { /* snow */
       let arms = "";
       for (let i = 0; i < 6; i++) {
@@ -182,6 +196,14 @@ window.XMAS_ART = (function () {
           <path d="M8 18L32 36L56 18" fill="none" ${S}/>
           <circle cx="32" cy="36" r="7" fill="${RUBY}" stroke="#5e1020" stroke-width="1"/>
           <path d="M29 35c0-2 3-2 3 0c0-2 3-2 3 0c0 2-3 4-3 4s-3-2-3-4z" fill="${GOLD_L}"/>`; break;
+      case "goldStar": /* 金色の星のオーナメント */
+        b = `<path d="M32 3V11" ${s}/><path d="M28.5 4Q32 0 35.5 4" fill="none" ${s}/>
+          <circle cx="32" cy="12.5" r="2" fill="none" ${s}/>
+          <circle cx="32" cy="36" r="24" fill="#ffe9a8" opacity=".22"/>
+          <polygon points="${starPts(32, 36, 5, 21, 8.6)}" fill="${G}" ${S}/>
+          <polygon points="${starPts(32, 36, 5, 13, 5.4)}" fill="none" stroke="#fff3c8" stroke-width="1" stroke-linejoin="round" opacity=".9"/>
+          <circle cx="32" cy="36" r="2.6" fill="${PEARL}" ${s}/>
+          ${sparkle(54, 14, 4, G)}${sparkle(10, 52, 3, G)}`; break;
       default: /* omamori */
         b = `<path d="M20 20C20 14 44 14 44 20V54C44 58 20 58 20 54Z" fill="${EMER}" stroke="#123f2e" stroke-width="1.3"/>
           <path d="M20 24H44" stroke="${GOLD_L}" stroke-width="1"/>
@@ -219,6 +241,7 @@ window.XMAS_ART = (function () {
       case "parol": return `<polygon points="${starPts(0, -4, 5, 18, 8)}" ${k}/><polygon points="${starPts(0, -4, 5, 9, 4)}" ${fi} opacity=".6"/><path d="M-8 10Q-12 18 -16 22M0 12V24M8 10Q12 18 16 22" fill="none" stroke="${ink}" stroke-width="1.4" stroke-dasharray="2.5 2"/>`;
       case "sun": return `<circle cx="0" cy="-6" r="9" ${k}/><path d="M0 -22V-18M0 6V10M-16 -6H-12M12 -6H16M-11 -17L-8 -14M11 -17L8 -14M-11 5L-8 2M11 5L8 2" ${k}/><path d="M-20 14Q-15 10 -10 14T0 14T10 14T20 14M-20 20Q-15 16 -10 20T0 20T10 20T20 20" ${k}/>`;
       case "cake": return `<path d="M-18 4H18V18H-18Z" ${k}/><path d="M-14 -8H14V4H-14Z" ${k}/><path d="M-18 8Q-12 12 -6 8Q0 12 6 8Q12 12 18 8" ${k}/><path d="M0 -8V-16" ${k}/><path d="M0 -17q3-4 0-7q-3 3 0 7z" ${fi}/><circle cx="-8" cy="-11" r="2.4" ${fi}/><circle cx="8" cy="-11" r="2.4" ${fi}/>`;
+      case "northstar": return `<path d="M0 -24L3 -3L0 18L-3 -3Z" ${fi}/><path d="M-16 -6L-2 -6M2 -6L16 -6" ${k}/><polygon points="${starPts(0, -6, 4, 9, 2.6, -Math.PI / 4)}" ${fi} opacity=".55"/><circle cx="0" cy="-6" r="2.4" fill="#fffaf0" stroke="${ink}" stroke-width="1.2"/><path d="M-22 20Q-16 15 -10 17Q-4 12 2 16Q9 11 16 15Q20 16 22 20" ${k}/><path d="M-14 17V12L-10 9L-6 12V17M8 16V11L12 8L16 11V16" fill="none" stroke="${ink}" stroke-width="1.4" stroke-linejoin="round"/>`;
       default: /* tree */ return `<path d="M0 -20L-8 -8H-4L-12 4H-6L-16 14H16L6 4H12L4 -8H8Z" ${k}/><polygon points="${starPts(0, -22, 5, 4.4, 1.9)}" ${fi}/><path d="M-22 20Q-16 16 -11 20T0 20T11 20T22 20" ${k}/><circle cx="-4" cy="0" r="1.4" ${fi}/><circle cx="5" cy="8" r="1.4" ${fi}/>`;
     }
   };
@@ -230,9 +253,9 @@ window.XMAS_ART = (function () {
   const stamp = (c, idx, opts) => {
     const o = opts || {};
     const got = !!o.got;
-    const oval = idx % 3 === 1;
-    const ink = got ? stampInk(idx) : "#b7a988";
-    const rot = got ? ((idx * 37) % 15) - 7 : 0;
+    const oval = o.round ? false : idx % 3 === 1;
+    const ink = got ? (o.ink || stampInk(idx)) : "#b7a988";
+    const rot = got ? (o.rot != null ? o.rot : ((idx * 37) % 15) - 7) : 0;
     const id = uid("sp");
     const rx = oval ? 56 : 52, ry = oval ? 44 : 52;
     let s = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -247,7 +270,7 @@ window.XMAS_ART = (function () {
       s += `<g transform="translate(60 61) scale(${oval ? 0.78 : 0.86})">${motif(c.stamp, ink)}</g>`;
       if (o.text !== false) {
         s += `<text font-family="'Zen Maru Gothic',sans-serif" font-weight="700" font-size="11" fill="${ink}" letter-spacing="1.5" text-anchor="middle"><textPath href="#${id}t" startOffset="50%">${esc(c.name)}</textPath></text>
-          <text font-family="'Cormorant Garamond',serif" font-weight="600" font-size="8.5" fill="${ink}" letter-spacing="1.2" text-anchor="middle"><textPath href="#${id}b" startOffset="50%">${esc((c.cityEn || c.nameEn).toUpperCase())} · NOËL</textPath></text>`;
+          <text font-family="'Cormorant Garamond',serif" font-weight="600" font-size="8.5" fill="${ink}" letter-spacing="1.2" text-anchor="middle"><textPath href="#${id}b" startOffset="50%">${esc(o.sub || (c.cityEn || c.nameEn).toUpperCase() + " · NOËL")}</textPath></text>`;
       }
       s += `<polygon points="${starPts(60 - rx + 13, 60, 5, 3.2, 1.3)}" fill="${ink}"/><polygon points="${starPts(60 + rx - 13, 60, 5, 3.2, 1.3)}" fill="${ink}"/>`;
     } else {
@@ -400,6 +423,7 @@ window.XMAS_ART = (function () {
   const parolShape = (x, y, r, col) => `<circle cx="${x}" cy="${y}" r="${f1(r * 2.2)}" fill="${col}" opacity=".16"/><polygon points="${starPts(x, y, 5, r, r * .45)}" fill="${col}"/><polygon points="${starPts(x, y, 5, r * .5, r * .22)}" fill="#fff6d0" opacity=".8"/><path d="M${f1(x - r * .4)} ${f1(y + r * .6)}l-3 ${f1(r)}M${x} ${f1(y + r * .5)}v${f1(r * 1.2)}M${f1(x + r * .4)} ${f1(y + r * .6)}l3 ${f1(r)}" stroke="${col}" stroke-width="1" opacity=".8"/>`;
 
   const postcard = (c) => {
+    if (c.scene === "northstar") return northStarScene();
     const rng = rngFrom(c.id + "pc");
     const sky = uid("sky"), gnd = uid("gd"), wat = uid("wa"), vg = uid("vg");
     const scene = c.scene;
@@ -555,6 +579,78 @@ window.XMAS_ART = (function () {
     return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${defs}</defs>${b}</svg>`;
   };
 
+  /* ============ ⑥ ひみつの14番目（北極星の村）のスタンプ ============ */
+  /* revealed=false：まだ開いていない「？」の金のスタンプ／true：金色の北極星のスタンプ */
+  const secretStamp = (c, revealed, opts) => {
+    if (revealed) return stamp(c, 13, Object.assign({ got: true, ink: "#a87a1e", round: true, rot: -3, sub: "NORTH STAR · NOËL" }, opts || {}));
+    const g = uid("ss");
+    return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${goldGrad(g, true)}
+      <radialGradient id="${g}r"><stop offset="0" stop-color="#fff6d6" stop-opacity=".9"/><stop offset="1" stop-color="#f3d98f" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="60" cy="60" r="56" fill="url(#${g}r)" opacity=".55"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="url(#${g})" stroke-width="2.4" stroke-dasharray="5 3.5"/>
+      <circle cx="60" cy="60" r="44" fill="none" stroke="${GOLD}" stroke-width=".9" opacity=".7"/>
+      <text x="60" y="76" text-anchor="middle" font-family="'Shippori Mincho B1',serif" font-weight="800" font-size="46" fill="url(#${g})" stroke="${GOLD_D}" stroke-width=".8">？</text>
+      <polygon points="${starPts(60, 16, 4, 5, 1.6)}" fill="${GOLD}"/><polygon points="${starPts(60, 104, 4, 5, 1.6)}" fill="${GOLD}"/>
+      <polygon points="${starPts(16, 60, 4, 4, 1.4)}" fill="${GOLD}"/><polygon points="${starPts(104, 60, 4, 4, 1.4)}" fill="${GOLD}"/></svg>`;
+  };
+
+  /* 北極星の村の風景（オーロラの下の、雪の小さな村。物語の中の村です） */
+  const northStarScene = () => {
+    const rng = rngFrom("northstar-village");
+    const sky = uid("ns"), au = uid("au"), au2 = uid("av"), snow = uid("sn"), glow = uid("gw"), vg = uid("vg");
+    let defs = `<linearGradient id="${sky}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050b26"/><stop offset=".55" stop-color="#0f2350"/><stop offset="1" stop-color="#28457a"/></linearGradient>
+      <linearGradient id="${au}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f7cf0" stop-opacity="0"/><stop offset=".35" stop-color="#7fe6c8" stop-opacity=".55"/><stop offset=".8" stop-color="#3fc0a0" stop-opacity=".25"/><stop offset="1" stop-color="#3fc0a0" stop-opacity="0"/></linearGradient>
+      <linearGradient id="${au2}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b48cf0" stop-opacity="0"/><stop offset=".5" stop-color="#a890f0" stop-opacity=".3"/><stop offset="1" stop-color="#5ad0c0" stop-opacity="0"/></linearGradient>
+      <linearGradient id="${snow}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f8ff"/><stop offset="1" stop-color="#b4c4e2"/></linearGradient>
+      <radialGradient id="${glow}"><stop offset="0" stop-color="#fff4cc" stop-opacity=".95"/><stop offset=".3" stop-color="#ffe08a" stop-opacity=".35"/><stop offset="1" stop-color="#ffe08a" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${vg}" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient>`;
+    let b = `<rect width="400" height="300" fill="url(#${sky})"/>` + starsLayer(rng, 80, 170);
+    /* オーロラのカーテン（縦のすじを重ねて） */
+    b += `<path d="M-20 150C40 70 110 130 180 80S300 40 420 90L420 150C320 110 260 150 180 140S50 130 -20 190Z" fill="url(#${au})"/>
+      <path d="M60 120C120 50 200 90 260 55S360 40 420 60L420 90C350 70 300 100 250 95S130 100 60 140Z" fill="url(#${au2})"/>`;
+    for (let i = 0; i < 26; i++) {
+      const x = 10 + i * 15 + rng() * 6, top = 60 + Math.sin(i * 0.55) * 22 + rng() * 10, h = 40 + rng() * 40;
+      b += `<rect x="${f1(x)}" y="${f1(top)}" width="${f1(1.2 + rng() * 2)}" height="${f1(h)}" fill="#9ff5da" opacity="${f1(0.06 + rng() * 0.1)}"/>`;
+    }
+    /* 北極星 */
+    b += `<circle cx="300" cy="46" r="34" fill="url(#${glow})"/>
+      <path d="M300 22L302.4 43.6L300 70L297.6 43.6Z M276 46L297.6 43.6L324 46L297.6 48.4Z" fill="#fff6dc"/>
+      <polygon points="${starPts(300, 46, 4, 7, 2, -Math.PI / 4)}" fill="#fff6dc" opacity=".8"/><circle cx="300" cy="46" r="2.6" fill="#fff"/>`;
+    /* 遠くの雪山と丘 */
+    b += `<path d="M0 200L50 168L90 186L150 150L210 182L260 160L320 178L400 150V230H0Z" fill="#2a3f6e"/>
+      <path d="M150 150L162 160L154 158L146 164L140 158Z M260 160L270 168L262 167L254 171Z" fill="#e8f0ff" opacity=".7"/>
+      <path d="M0 226Q100 200 200 214T400 208V300H0Z" fill="url(#${snow})"/>`;
+    /* もみの木 */
+    [[28, 236, 34], [62, 228, 24], [352, 224, 30], [380, 232, 22], [180, 214, 18]].forEach(([x, base, h]) => {
+      b += `<path d="M${x} ${base - h}L${f1(x - h * .32)} ${base}H${f1(x + h * .32)}Z" fill="#163a3a"/><path d="M${x} ${base - h}L${f1(x - h * .14)} ${f1(base - h * .55)}H${f1(x + h * .14)}Z" fill="#eef4ff" opacity=".75"/>`;
+    });
+    /* 小さな村（窓に温かい灯り）と工房 */
+    const house = (x, base, w, h, col, win) => {
+      const rh = w * .5;
+      let s2 = `<rect x="${x}" y="${base - h}" width="${w}" height="${h}" fill="${col}"/>`;
+      s2 += `<path d="M${x - 4} ${base - h}L${x + w / 2} ${base - h - rh}L${x + w + 4} ${base - h}Z" fill="#f4f8ff"/>`;
+      s2 += `<path d="M${x - 4} ${base - h}L${x + w + 4} ${base - h}" stroke="#c9d6ee" stroke-width="1.5"/>`;
+      win.forEach(([wx, wy, ww, wh]) => { s2 += `<rect x="${x + wx}" y="${base - h + wy}" width="${ww}" height="${wh}" fill="#ffd27a"/><rect x="${x + wx}" y="${base - h + wy}" width="${ww}" height="${wh}" fill="none" stroke="#7a4a22" stroke-width=".6"/>`; });
+      s2 += `<circle cx="${x + w / 2}" cy="${base - h / 2}" r="${w * .9}" fill="#ffd98a" opacity=".07"/>`;
+      return s2;
+    };
+    b += house(96, 252, 30, 20, "#5a3426", [[5, 7, 7, 7], [18, 7, 7, 7]]);
+    b += house(134, 246, 24, 18, "#4a2e3e", [[8, 6, 8, 7]]);
+    /* 工房（いちばん大きな建物。煙突から細い煙） */
+    b += `<rect x="236" y="208" width="8" height="18" fill="#3a2420"/><path d="M240 206C236 196 246 190 240 180C236 172 244 166 242 158" fill="none" stroke="#dfe6f5" stroke-width="2" opacity=".35" stroke-linecap="round"/>`;
+    b += house(186, 256, 64, 32, "#6a2a2a", [[8, 10, 10, 12], [27, 8, 11, 24], [46, 10, 10, 12]]);
+    b += `<path d="M213 232h11" stroke="#7a4a22" stroke-width=".8"/>`;
+    b += house(272, 252, 28, 20, "#3a3a5a", [[6, 7, 7, 7], [16, 7, 7, 7]]);
+    b += house(310, 258, 22, 16, "#5a3426", [[8, 5, 7, 6]]);
+    /* 灯りの小道とガーランド */
+    b += garland(126, 236, 186, 232, 6, 8, ["#ffe08a", "#ff9a8a"]) + garland(250, 232, 300, 234, 6, 7, ["#ffe08a", "#fff3c4"]);
+    b += `<path d="M150 300Q190 270 218 258" fill="none" stroke="#ffe7a8" stroke-width="1.2" stroke-dasharray="1 5" opacity=".7" stroke-linecap="round"/>`;
+    for (let i = 0; i < 5; i++) b += glowDot(160 + i * 13, 292 - i * 8, 1.4, "#ffe3a0", .9);
+    b += fallingSnow(rng, 34);
+    b += `<rect width="400" height="300" fill="url(#${vg})"/>`;
+    return `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>${defs}</defs>${b}</svg>`;
+  };
+
   /* ============ ⑤ 光る地球儀（世界一周のお祝い） ============ */
   const globe = () => {
     const a = uid("gl"), bg = uid("gb"), gg = uid("gg");
@@ -586,5 +682,5 @@ window.XMAS_ART = (function () {
 
   const toDataUrl = (svg) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 
-  return { fortuneSymbol, luckyIcon, stamp, stampInk, postcard, globe, divider, toDataUrl, starPts, esc };
+  return { fortuneSymbol, luckyIcon, stamp, stampInk, secretStamp, postcard, globe, divider, toDataUrl, starPts, esc };
 })();
